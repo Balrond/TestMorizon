@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Load token from .env if not in env
+if [[ -z "${IMPORT_API_TOKEN:-}" ]] && [[ -f "$ROOT_DIR/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ROOT_DIR/.env"
+  set +a
+fi
+
+: "${IMPORT_API_TOKEN:?Missing IMPORT_API_TOKEN (set it in .env or environment)}"
+
+COUNT=100
+DRY_RUN=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=true ;;
+    --count=*)
+      COUNT="${arg#*=}"
+      ;;
+    *)
+      echo "Unknown arg: $arg" >&2
+      exit 2
+      ;;
+  esac
+done
+
+if ! [[ "$COUNT" =~ ^[1-9][0-9]*$ ]]; then
+  echo "--count must be a positive integer (got: $COUNT)" >&2
+  exit 2
+fi
+
+URL="http://localhost:4000/api/import"
+BODY=$(printf '{"count":%s,"dry_run":%s}' "$COUNT" "$DRY_RUN")
+
+if command -v jq >/dev/null 2>&1; then
+  curl -sS -X POST "$URL" \
+    -H "x-api-token: $IMPORT_API_TOKEN" \
+    -H "content-type: application/json" \
+    -d "$BODY" | jq
+else
+  curl -sS -X POST "$URL" \
+    -H "x-api-token: $IMPORT_API_TOKEN" \
+    -H "content-type: application/json" \
+    -d "$BODY"
+  echo
+fi

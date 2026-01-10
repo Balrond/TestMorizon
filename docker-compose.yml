@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: phoenix_app
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  phoenix:
+    build: ./phoenix-api
+    environment:
+      DATABASE_URL: ecto://postgres:postgres@db/phoenix_app
+      IMPORT_API_TOKEN: ${IMPORT_API_TOKEN}
+    depends_on:
+      - db
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./phoenix-api:/app
+
+  symfony:
+    build: ./symfony-app
+    depends_on:
+      - phoenix
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: 1
+      APP_SECRET: dev
+      DEFAULT_URI: http://localhost:8000
+      PHOENIX_API_BASE_URL: "http://phoenix:4000/api"
+    volumes:
+      - ./symfony-app:/app
+
+volumes:
+  pgdata:

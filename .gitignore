@@ -1,0 +1,21 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Phoenix / Elixir
+phoenix-api/_build/
+phoenix-api/deps/
+phoenix-api/.elixir_ls/
+
+# Symfony / PHP
+symfony-app/vendor/
+symfony-app/var/
+symfony-app/.phpunit.result.cache
+
+# Env (Symfony standard)
+symfony-app/.env.local
+symfony-app/.env.*.local
+
+# Node (if ever needed)
+node_modules/
